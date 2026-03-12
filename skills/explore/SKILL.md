@@ -1,6 +1,6 @@
 ---
 name: explore
-description: Read an issue tracker ticket and analyze the codebase to provide a structured summary. Use when you want to understand a ticket before working on it.
+description: Browse recent tickets or read a specific ticket and analyze the codebase. Without arguments, lists recent open tickets to pick from. With a ticket ID, provides a structured summary.
 argument-hint: [TICKET-ID]
 ---
 
@@ -10,14 +10,54 @@ You are analyzing a ticket to provide a structured summary. **Do not modify any 
 
 ## Input
 
-Ticket identifier: `$ARGUMENTS`
+Arguments: `$ARGUMENTS`
+
+## Step 0: Browse Mode (no arguments)
+
+If `$ARGUMENTS` is empty (the user just typed `/ticket-pilot:explore` with nothing after):
+
+### Detect Tracker
+
+Since there is no ticket ID to detect format from, determine the tracker by:
+1. Check `.claude/ticket-pilot.json` for a `tracker` field
+2. Check which MCP servers are available (Linear MCP, Atlassian MCP) or if `gh` CLI is authenticated
+3. If multiple trackers are available, ask the user which one to browse
+
+### List Recent Tickets
+
+Fetch the most recent open tickets (up to 20):
+
+- **GitHub:** Run `gh issue list --state open --json number,title,labels,assignees,state --limit 20`
+- **Linear:** Use `list_my_issues` to get tickets assigned to the user. If no results, use `list_issues` for recent open tickets.
+- **Jira:** Use `searchJiraIssuesUsingJql` with JQL: `status != Done ORDER BY updated DESC` (max 20 results)
+
+### Present List
+
+Display the tickets in a numbered list:
+
+```
+## Recent Open Tickets
+
+| # | ID | Title | Status | Assignee |
+|---|-----|-------|--------|----------|
+| 1 | ENG-123 | Add rate limiting | In Progress | @user |
+| 2 | ENG-124 | Fix login timeout | Todo | — |
+| ... | ... | ... | ... | ... |
+
+Which ticket do you want to explore? (enter a number or ticket ID)
+```
+
+Wait for the user to pick a ticket, then continue with Step 1 below using that ticket ID.
+
+---
 
 ## Step 1: Detect Tracker
 
-<!-- Note: $ARGUMENTS is safe here because explore only takes a single ticket ID with no flags -->
-First, run the tracker detection script using the Bash tool:
+If a ticket ID was provided (via `$ARGUMENTS` or picked from browse mode):
+
+Run the tracker detection script using the Bash tool:
 ```
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect-tracker.sh "$ARGUMENTS"
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect-tracker.sh "<ticket-id>"
 ```
 This outputs `github`, `ambiguous`, or `unknown`.
 

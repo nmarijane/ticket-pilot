@@ -64,11 +64,12 @@ Analyzes tickets against the actual codebase to estimate complexity (S/M/L/XL), 
 ### `/ticket-pilot:explore` — Understand before you build
 
 ```
-/ticket-pilot:explore ENG-123
+/ticket-pilot:explore                 # browse recent tickets, pick one
+/ticket-pilot:explore ENG-123         # deep dive into a specific ticket
 /ticket-pilot:explore #42
 ```
 
-Read-only deep dive: fetches the ticket, searches the codebase for related files, and presents a structured summary with impacted files, technical context, and open questions. Zero modifications.
+Without arguments, lists recent open tickets and lets you pick one interactively. With a ticket ID, fetches the ticket, searches the codebase for related files, and presents a structured summary with impacted files, technical context, and open questions. Zero modifications.
 
 ### `/ticket-pilot:create` — Write tickets from code context
 
