@@ -42,6 +42,15 @@ ticket-pilot reads the ticket, understands the requirements, writes the code, ru
 
 ## Features
 
+### `/ticket-pilot:setup` — One-time project configuration
+
+```
+/ticket-pilot:setup                    # interactive setup wizard
+/ticket-pilot:setup --tracker linear   # quick setup
+```
+
+Configures which tracker this project uses. Saves to `.claude/ticket-pilot.json` so every command knows exactly where to look — no guessing, no prompts. Run once per project.
+
 ### `/ticket-pilot:resolve` — Ticket to PR in one command
 
 ```
@@ -209,9 +218,10 @@ ticket-pilot is a **pure-skills plugin** — every file is Markdown.
 ticket-pilot/
   .claude-plugin/plugin.json       # Plugin manifest
   skills/
+    setup/SKILL.md                 # Project configuration wizard
     resolve/SKILL.md               # Ticket -> PR workflow
     triage/SKILL.md                # Priority & complexity analysis
-    explore/SKILL.md               # Read-only ticket summary
+    explore/SKILL.md               # Read-only ticket summary + browse
     create/SKILL.md                # Structured ticket creation
   agents/
     resolver.md                    # Subagent: implementation
