@@ -23,7 +23,11 @@ Parse the arguments:
 
 ## Step 1: Detect Tracker and Fetch Ticket
 
-Tracker format hint: !`${CLAUDE_PLUGIN_ROOT}/scripts/detect-tracker.sh $0`
+First, run the tracker detection script using the Bash tool:
+```
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect-tracker.sh "$0"
+```
+This outputs `github`, `ambiguous`, or `unknown`.
 
 Follow the same detection logic as other skills:
 1. Check `.claude/ticket-pilot.json`

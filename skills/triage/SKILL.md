@@ -24,7 +24,11 @@ Determine the mode from the arguments.
 For each ticket ID, determine the tracker.
 <!-- Note: $0 is used instead of $ARGUMENTS because $ARGUMENTS may contain flags like --batch or --sprint -->
 
-Tracker format hint: !`${CLAUDE_PLUGIN_ROOT}/scripts/detect-tracker.sh $0`
+First, run the tracker detection script using the Bash tool:
+```
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect-tracker.sh "$0"
+```
+This outputs `github`, `ambiguous`, or `unknown`.
 
 Follow the same detection logic as explore:
 1. Check `.claude/ticket-pilot.json`

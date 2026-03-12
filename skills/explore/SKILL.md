@@ -15,7 +15,11 @@ Ticket identifier: `$ARGUMENTS`
 ## Step 1: Detect Tracker
 
 <!-- Note: $ARGUMENTS is safe here because explore only takes a single ticket ID with no flags -->
-Tracker format hint: !`${CLAUDE_PLUGIN_ROOT}/scripts/detect-tracker.sh $ARGUMENTS`
+First, run the tracker detection script using the Bash tool:
+```
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect-tracker.sh "$ARGUMENTS"
+```
+This outputs `github`, `ambiguous`, or `unknown`.
 
 Use this detection result to determine which tracker to query:
 
