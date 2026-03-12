@@ -17,8 +17,8 @@ fi
 # GitHub: #123 or owner/repo#123
 if [[ "$ID" =~ ^#[0-9]+$ ]] || [[ "$ID" =~ ^[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+#[0-9]+$ ]]; then
   echo "github"
-# Linear or Jira: PREFIX-NUMBER (2-5 uppercase letters, dash, digits)
-elif [[ "$ID" =~ ^[A-Z]{2,5}-[0-9]+$ ]]; then
+# Linear or Jira: PREFIX-NUMBER (1-5 uppercase letters, dash, digits)
+elif [[ "$ID" =~ ^[A-Z]{1,5}-[0-9]+$ ]]; then
   echo "ambiguous"
 else
   echo "unknown"
