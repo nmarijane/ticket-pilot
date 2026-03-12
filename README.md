@@ -1,16 +1,10 @@
 <div align="center">
 
-```
-  _   _      _        _         _ _       _
- | |_(_) ___| | _____| |_      | (_) ___ | |_
- | __| |/ __| |/ / _ \ __|____ | | |/ _ \| __|
- | |_| | (__|   <  __/ ||_____|| | | (_) | |_
-  \__|_|\___|_|\_\___|\__|     |_|_|\___/ \__|
-```
+# ticket-pilot
 
 **Issue tracker integration for Claude Code**
 
-Go from ticket to pull request without leaving your terminal.
+*Go from ticket to pull request without leaving your terminal.*
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Claude Code Plugin](https://img.shields.io/badge/claude--code-plugin-blueviolet)](https://code.claude.com/docs/en/plugins)
