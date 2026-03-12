@@ -12,6 +12,23 @@ You are analyzing tickets to provide actionable recommendations on priority, com
 
 Arguments: `$ARGUMENTS`
 
+## Pre-flight: Check Configuration
+
+**Before anything else**, check if `.claude/ticket-pilot.json` exists in the project root.
+
+If the file **does not exist**, tell the user:
+
+> It looks like ticket-pilot hasn't been configured for this project yet. Let me set it up quickly — which issue tracker do you use?
+> 1. **GitHub Issues**
+> 2. **Linear**
+> 3. **Jira**
+
+Once the user answers, create `.claude/ticket-pilot.json` with at minimum `{ "tracker": "<choice>" }`. Then continue with the command they originally ran.
+
+If the file **exists**, read it and use the `tracker` field for all tracker decisions below.
+
+---
+
 Parse the arguments:
 - **Single ticket:** just a ticket ID (e.g., `ENG-123`)
 - **Batch mode:** multiple ticket IDs (e.g., `ENG-123 ENG-124 ENG-125`) or `--batch ENG-123 ENG-124`
@@ -21,13 +38,7 @@ Determine the mode from the arguments.
 
 ## Tracker Detection
 
-For each ticket ID, determine the tracker.
-<!-- Note: $0 is used instead of $ARGUMENTS because $ARGUMENTS may contain flags like --batch or --sprint -->
-
-First, run the tracker detection script using the Bash tool:
-```
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect-tracker.sh "$0"
-```
+Use the tracker from `.claude/ticket-pilot.json`.
 This outputs `github`, `ambiguous`, or `unknown`.
 
 Follow the same detection logic as explore:

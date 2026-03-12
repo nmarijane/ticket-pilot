@@ -12,16 +12,30 @@ You are analyzing a ticket to provide a structured summary. **Do not modify any 
 
 Arguments: `$ARGUMENTS`
 
+## Pre-flight: Check Configuration
+
+**Before anything else**, check if `.claude/ticket-pilot.json` exists in the project root.
+
+If the file **does not exist**, tell the user:
+
+> It looks like ticket-pilot hasn't been configured for this project yet. Let me set it up quickly — which issue tracker do you use?
+> 1. **GitHub Issues**
+> 2. **Linear**
+> 3. **Jira**
+
+Once the user answers, create `.claude/ticket-pilot.json` with at minimum `{ "tracker": "<choice>" }`. Then continue with the command they originally ran.
+
+If the file **exists**, read it and use the `tracker` field for all tracker decisions below.
+
+---
+
 ## Step 0: Browse Mode (no arguments)
 
 If `$ARGUMENTS` is empty (the user just typed `/ticket-pilot:explore` with nothing after):
 
-### Detect Tracker
+### List Recent Tickets
 
-Since there is no ticket ID to detect format from, determine the tracker by:
-1. Check `.claude/ticket-pilot.json` for a `tracker` field
-2. Check which MCP servers are available (Linear MCP, Atlassian MCP) or if `gh` CLI is authenticated
-3. If multiple trackers are available, ask the user which one to browse
+Use the tracker from `.claude/ticket-pilot.json` to fetch recent tickets.
 
 ### List Recent Tickets
 
@@ -51,28 +65,9 @@ Wait for the user to pick a ticket, then continue with Step 1 below using that t
 
 ---
 
-## Step 1: Detect Tracker
+## Step 1: Fetch Ticket
 
-If a ticket ID was provided (via `$ARGUMENTS` or picked from browse mode):
-
-Run the tracker detection script using the Bash tool:
-```
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect-tracker.sh "<ticket-id>"
-```
-This outputs `github`, `ambiguous`, or `unknown`.
-
-Use this detection result to determine which tracker to query:
-
-- **If `github`:** Use the `gh` CLI to read the issue. Run: `gh issue view <number> --json title,body,comments,labels,assignees,state,milestone`
-- **If `ambiguous`:** Check if `.claude/ticket-pilot.json` exists in the project root. If it specifies a `tracker` field, use that. Otherwise, check which MCP servers are available. If only one tracker MCP is configured, use it. If still ambiguous, ask the user which tracker to use and offer to save the choice to `.claude/ticket-pilot.json`.
-- **If `unknown`:** Ask the user to clarify the ticket identifier format.
-
-### Prerequisites
-
-Before querying, verify the tracker is accessible:
-- **Linear:** Verify the Linear MCP server is available. If not, tell the user: "Add the Linear MCP server: `claude mcp add --transport http linear https://mcp.linear.app/mcp`"
-- **GitHub:** Verify `gh` is installed and authenticated. Run `gh auth status`. If it fails, tell the user: "Install GitHub CLI: `brew install gh && gh auth login`"
-- **Jira:** Verify the Atlassian MCP server is available. If not, tell the user: "Add the Atlassian MCP server and configure it for your instance"
+Use the tracker from `.claude/ticket-pilot.json` (already verified in pre-flight).
 
 ## Step 2: Fetch Ticket
 

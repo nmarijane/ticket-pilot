@@ -14,20 +14,31 @@ You are resolving an issue tracker ticket end-to-end: reading it, implementing t
 
 Arguments: `$ARGUMENTS`
 
+## Pre-flight: Check Configuration
+
+**Before anything else**, check if `.claude/ticket-pilot.json` exists in the project root.
+
+If the file **does not exist**, tell the user:
+
+> It looks like ticket-pilot hasn't been configured for this project yet. Let me set it up quickly — which issue tracker do you use?
+> 1. **GitHub Issues**
+> 2. **Linear**
+> 3. **Jira**
+
+Once the user answers, create `.claude/ticket-pilot.json` with at minimum `{ "tracker": "<choice>" }`. Then continue with the command they originally ran.
+
+If the file **exists**, read it and use the `tracker` field for all tracker decisions below (skip detection script, skip ambiguity prompts).
+
+---
+
 Parse the arguments:
 - **Ticket ID:** the first argument that is not a flag (e.g., `ENG-123`, `#456`)
 - **Mode flag:** `--auto` for fully autonomous, `--guided` for step-by-step with user approval.
-- **Default mode:** If no flag is provided, check `.claude/ticket-pilot.json` for a `defaultMode` field (`"auto"` or `"guided"`). If not configured, default to `guided`.
+- **Default mode:** If no flag is provided, check the config for a `defaultMode` field (`"auto"` or `"guided"`). If not configured, default to `guided`.
 
-<!-- Note: $0 is used instead of $ARGUMENTS because $ARGUMENTS may contain flags like --auto or --guided -->
+## Step 1: Fetch Ticket
 
-## Step 1: Detect Tracker and Fetch Ticket
-
-First, run the tracker detection script using the Bash tool:
-```
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect-tracker.sh "$0"
-```
-This outputs `github`, `ambiguous`, or `unknown`.
+Use the tracker from `.claude/ticket-pilot.json`.
 
 Follow the same detection logic as other skills:
 1. Check `.claude/ticket-pilot.json`
