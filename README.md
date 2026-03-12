@@ -49,7 +49,9 @@ ticket-pilot reads the ticket, understands the requirements, writes the code, ru
 /ticket-pilot:setup --tracker linear   # quick setup
 ```
 
-Configures which tracker this project uses. Saves to `.claude/ticket-pilot.json` so every command knows exactly where to look — no guessing, no prompts. Run once per project.
+Configures which tracker this project uses. Saves to `.claude/ticket-pilot.json` so every command knows exactly where to look — no guessing, no prompts.
+
+> **You don't need to run this manually.** If you jump straight into any command without configuring first, ticket-pilot will ask you which tracker you use, save your choice, and continue. Zero friction.
 
 ### `/ticket-pilot:resolve` — Ticket to PR in one command
 
@@ -83,8 +85,8 @@ Without arguments, lists recent open tickets and lets you pick one interactively
 ### `/ticket-pilot:create` — Write tickets from code context
 
 ```
-/ticket-pilot:create --tracker linear
-/ticket-pilot:create --tracker github Fix the login timeout bug
+/ticket-pilot:create                              # describe the issue interactively
+/ticket-pilot:create Fix the login timeout bug    # quick creation with description
 ```
 
 Analyzes the codebase to generate structured tickets with title, description, acceptance criteria, and suggested labels. Previews before creating.
@@ -110,10 +112,20 @@ Navigate with arrow keys, type to filter, press Enter to select. Requires [`gum`
                                           |
                                           v
                               +---------------------+
-                              |   Detect Tracker    |
-                              | (config > MCP > ID) |
+                              |   Read Config       |
+                              | .claude/ticket-     |
+                              | pilot.json          |
                               +---------------------+
                                           |
+                                    config exists?
+                                    /           \
+                                  yes            no
+                                  /               \
+                                 v                 v
+                         use configured      ask user &
+                           tracker          save config
+                                  \               /
+                                   v             v
                          +----------------+----------------+
                          |                |                |
                     Linear MCP       gh CLI        Atlassian MCP
@@ -151,31 +163,31 @@ Navigate with arrow keys, type to filter, press Enter to select. Requires [`gum`
 git clone https://github.com/nmarijane/ticket-pilot.git
 ```
 
-### 2. Connect a tracker
-
-| Tracker | One-liner |
-|---------|-----------|
-| **Linear** | `claude mcp add --transport http linear https://mcp.linear.app/mcp` |
-| **GitHub** | `brew install gh && gh auth login` |
-| **Jira** | Configure the [Atlassian MCP server](https://www.npmjs.com/package/@anthropic/mcp-atlassian) |
-
-### 3. Launch
+### 2. Launch
 
 ```bash
 claude --plugin-dir ./ticket-pilot
 ```
 
-### 4. Go
+### 3. Go
 
 ```
-/ticket-pilot:explore ENG-123
+/ticket-pilot:explore
 ```
+
+That's it. On first use, ticket-pilot asks which tracker you use, verifies it's accessible, and saves the config. If your tracker needs setup:
+
+| Tracker | Setup |
+|---------|-------|
+| **Linear** | `claude mcp add --transport http linear https://mcp.linear.app/mcp` |
+| **GitHub** | `brew install gh && gh auth login` |
+| **Jira** | Configure the [Atlassian MCP server](https://www.npmjs.com/package/@anthropic/mcp-atlassian) |
 
 ---
 
 ## Configuration
 
-Optionally create `.claude/ticket-pilot.json` in your project root to skip tracker detection:
+ticket-pilot stores its config in `.claude/ticket-pilot.json`. This file is created automatically on first use, or you can run `/ticket-pilot:setup` to configure it interactively.
 
 ```json
 {
@@ -188,12 +200,12 @@ Optionally create `.claude/ticket-pilot.json` in your project root to skip track
 
 | Field | Description | Default |
 |-------|-------------|---------|
-| `tracker` | `linear`, `github`, or `jira` | Auto-detected |
+| `tracker` | `linear`, `github`, or `jira` | Set on first use |
 | `teamPrefixes` | Team prefixes for this project | — |
 | `defaultPrefix` | Default team when creating tickets | — |
 | `defaultMode` | `guided` or `auto` for `/resolve` | `guided` |
 
-All fields are optional. Without this file, ticket-pilot auto-detects the tracker from your MCP servers and ticket ID format.
+Commit this file to share the config with your team, or add it to `.gitignore` for personal settings.
 
 ---
 
