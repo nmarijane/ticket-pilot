@@ -79,6 +79,18 @@ Read-only deep dive: fetches the ticket, searches the codebase for related files
 
 Analyzes the codebase to generate structured tickets with title, description, acceptance criteria, and suggested labels. Previews before creating.
 
+### Interactive Picker — Browse and select tickets visually
+
+```bash
+./scripts/pick.sh                          # my tickets → pick action
+./scripts/pick.sh resolve                  # my tickets → resolve selected
+./scripts/pick.sh explore --all            # all open tickets
+./scripts/pick.sh triage --sprint          # current sprint tickets
+./scripts/pick.sh --tracker jira resolve   # force a specific tracker
+```
+
+Navigate with arrow keys, type to filter, press Enter to select. Requires [`gum`](https://github.com/charmbracelet/gum) (`brew install gum`).
+
 ---
 
 ## How It Works
