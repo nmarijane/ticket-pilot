@@ -49,6 +49,11 @@ assert_eq "PROJ-1 ambiguous" "ambiguous" "$("$DETECT" 'PROJ-1')"
 assert_eq "AB-999 ambiguous" "ambiguous" "$("$DETECT" 'AB-999')"
 assert_eq "ABCDE-1 ambiguous (5 chars)" "ambiguous" "$("$DETECT" 'ABCDE-1')"
 
+# Single-letter prefixes (issue #3)
+assert_eq "X-123 single letter" "ambiguous" "$("$DETECT" 'X-123')"
+assert_eq "A-1 single letter" "ambiguous" "$("$DETECT" 'A-1')"
+assert_eq "Z-999 single letter" "ambiguous" "$("$DETECT" 'Z-999')"
+
 # Unknown patterns
 assert_eq "lowercase prefix" "unknown" "$("$DETECT" 'eng-123')"
 assert_eq "no number" "unknown" "$("$DETECT" 'ENG-')"
