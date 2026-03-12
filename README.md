@@ -1,71 +1,165 @@
-# ticket-pilot
+<div align="center">
 
-Issue tracker integration for Claude Code — resolve, triage, explore, and create tickets from your terminal.
+```
+  _   _      _        _         _ _       _
+ | |_(_) ___| | _____| |_      | (_) ___ | |_
+ | __| |/ __| |/ / _ \ __|____ | | |/ _ \| __|
+ | |_| | (__|   <  __/ ||_____|| | | (_) | |_
+  \__|_|\___|_|\_\___|\__|     |_|_|\___/ \__|
+```
+
+**Issue tracker integration for Claude Code**
+
+Go from ticket to pull request without leaving your terminal.
+
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Claude Code Plugin](https://img.shields.io/badge/claude--code-plugin-blueviolet)](https://code.claude.com/docs/en/plugins)
+[![Linear](https://img.shields.io/badge/Linear-supported-5E6AD2)](https://linear.app)
+[![GitHub Issues](https://img.shields.io/badge/GitHub_Issues-supported-333)](https://github.com)
+[![Jira](https://img.shields.io/badge/Jira-supported-0052CC)](https://www.atlassian.com/software/jira)
+
+</div>
+
+---
+
+## The Problem
+
+You're in your terminal. You have a ticket to work on. So you:
+
+1. Open the browser
+2. Find the ticket
+3. Read the description
+4. Copy the acceptance criteria
+5. Switch back to your editor
+6. Create a branch
+7. Start coding
+8. Go back to check that one comment you forgot
+9. ...
+
+**What if you could just type one command?**
+
+```
+/ticket-pilot:resolve ENG-123
+```
+
+ticket-pilot reads the ticket, understands the requirements, writes the code, runs the tests, and opens the PR. All from your terminal.
+
+---
 
 ## Features
 
-| Command | Description |
-|---------|-------------|
-| `/ticket-pilot:resolve` | Read a ticket, implement the solution, and create a PR |
-| `/ticket-pilot:triage` | Analyze tickets for priority, complexity, and dependencies |
-| `/ticket-pilot:explore` | Read-only summary of a ticket with codebase context |
-| `/ticket-pilot:create` | Create a well-structured ticket from a conversation |
+### `/ticket-pilot:resolve` — Ticket to PR in one command
 
-Supports **Linear**, **GitHub Issues**, and **Jira** through existing MCP servers and the `gh` CLI.
-
-## Installation
-
-**Manual (development):**
-
-```bash
-git clone https://github.com/nmeridjen/ticket-pilot.git
-claude --plugin-dir ./ticket-pilot
+```
+/ticket-pilot:resolve ENG-123              # guided: review each step
+/ticket-pilot:resolve ENG-123 --auto       # autonomous: sit back and watch
 ```
 
-## Prerequisites
+Reads the ticket, analyzes the codebase, creates a branch, implements the solution, runs tests, commits, and opens a PR. In **guided** mode, you approve each step. In **auto** mode, it handles everything (with a hard gate: tests must pass before committing).
 
-Set up at least one tracker before using the plugin:
+### `/ticket-pilot:triage` — Prioritize smarter
 
-| Tracker | Setup |
-|---------|-------|
-| **Linear** | `claude mcp add --transport http linear https://mcp.linear.app/mcp` |
-| **GitHub** | `brew install gh && gh auth login` |
-| **Jira** | Configure the Atlassian MCP server for your instance |
+```
+/ticket-pilot:triage ENG-123                          # single ticket
+/ticket-pilot:triage ENG-123 ENG-124 ENG-125          # batch analysis
+/ticket-pilot:triage --sprint                          # entire sprint
+```
 
-## Usage
+Analyzes tickets against the actual codebase to estimate complexity (S/M/L/XL), suggest priority, identify risks and dependencies, and recommend the optimal order to tackle them.
 
-### Explore a ticket
+### `/ticket-pilot:explore` — Understand before you build
 
 ```
 /ticket-pilot:explore ENG-123
 /ticket-pilot:explore #42
 ```
 
-### Resolve a ticket
+Read-only deep dive: fetches the ticket, searches the codebase for related files, and presents a structured summary with impacted files, technical context, and open questions. Zero modifications.
 
-```
-/ticket-pilot:resolve ENG-123              # guided mode (default)
-/ticket-pilot:resolve ENG-123 --auto       # fully autonomous
-```
-
-### Triage tickets
-
-```
-/ticket-pilot:triage ENG-123                          # single ticket
-/ticket-pilot:triage ENG-123 ENG-124 ENG-125          # batch
-/ticket-pilot:triage --sprint                          # current sprint
-```
-
-### Create a ticket
+### `/ticket-pilot:create` — Write tickets from code context
 
 ```
 /ticket-pilot:create --tracker linear
 /ticket-pilot:create --tracker github Fix the login timeout bug
 ```
 
+Analyzes the codebase to generate structured tickets with title, description, acceptance criteria, and suggested labels. Previews before creating.
+
+---
+
+## How It Works
+
+```
+                         You type: /ticket-pilot:resolve ENG-123
+                                          |
+                                          v
+                              +---------------------+
+                              |   Detect Tracker    |
+                              | (config > MCP > ID) |
+                              +---------------------+
+                                          |
+                         +----------------+----------------+
+                         |                |                |
+                    Linear MCP       gh CLI        Atlassian MCP
+                         |                |                |
+                         v                v                v
+                              +---------------------+
+                              |    Fetch Ticket     |
+                              +---------------------+
+                                          |
+                                          v
+                              +---------------------+
+                              |  Analyze Codebase   |
+                              +---------------------+
+                                          |
+                                          v
+                              +---------------------+
+                              | Implement & Test    |
+                              +---------------------+
+                                          |
+                                          v
+                              +---------------------+
+                              |   Commit & PR       |
+                              +---------------------+
+```
+
+**Zero dependencies.** The plugin is pure Markdown — no build step, no npm install, no runtime. It orchestrates tools that are already on your machine.
+
+---
+
+## Quick Start
+
+### 1. Clone
+
+```bash
+git clone https://github.com/nmarijane/ticket-pilot.git
+```
+
+### 2. Connect a tracker
+
+| Tracker | One-liner |
+|---------|-----------|
+| **Linear** | `claude mcp add --transport http linear https://mcp.linear.app/mcp` |
+| **GitHub** | `brew install gh && gh auth login` |
+| **Jira** | Configure the [Atlassian MCP server](https://www.npmjs.com/package/@anthropic/mcp-atlassian) |
+
+### 3. Launch
+
+```bash
+claude --plugin-dir ./ticket-pilot
+```
+
+### 4. Go
+
+```
+/ticket-pilot:explore ENG-123
+```
+
+---
+
 ## Configuration
 
-Create `.claude/ticket-pilot.json` in your project root (optional):
+Optionally create `.claude/ticket-pilot.json` in your project root to skip tracker detection:
 
 ```json
 {
@@ -76,35 +170,75 @@ Create `.claude/ticket-pilot.json` in your project root (optional):
 }
 ```
 
-| Field | Description |
-|-------|-------------|
-| `tracker` | Default tracker: `linear`, `github`, or `jira` |
-| `teamPrefixes` | Team prefixes used in this project (for Linear/Jira) |
-| `defaultPrefix` | Default team prefix when creating tickets |
-| `defaultMode` | Default mode for `/resolve`: `guided` or `auto` |
+| Field | Description | Default |
+|-------|-------------|---------|
+| `tracker` | `linear`, `github`, or `jira` | Auto-detected |
+| `teamPrefixes` | Team prefixes for this project | — |
+| `defaultPrefix` | Default team when creating tickets | — |
+| `defaultMode` | `guided` or `auto` for `/resolve` | `guided` |
 
-All fields are optional.
+All fields are optional. Without this file, ticket-pilot auto-detects the tracker from your MCP servers and ticket ID format.
+
+---
 
 ## Supported Trackers
 
-| Feature | Linear | GitHub | Jira |
-|---------|--------|--------|------|
+|  | Linear | GitHub Issues | Jira |
+|--|--------|--------------|------|
 | Read tickets | Yes | Yes | Yes |
 | Create tickets | Yes | Yes | Yes |
 | Update status | Yes | Via PR | Yes |
 | Add comments | Yes | Yes | Yes |
 | Sprint/cycle view | Yes | Milestones | Yes |
+| Branch name from ticket | Yes | — | — |
+
+---
+
+## Architecture
+
+ticket-pilot is a **pure-skills plugin** — every file is Markdown.
+
+```
+ticket-pilot/
+  .claude-plugin/plugin.json       # Plugin manifest
+  skills/
+    resolve/SKILL.md               # Ticket -> PR workflow
+    triage/SKILL.md                # Priority & complexity analysis
+    explore/SKILL.md               # Read-only ticket summary
+    create/SKILL.md                # Structured ticket creation
+  agents/
+    resolver.md                    # Subagent: implementation
+    triager.md                     # Subagent: batch analysis
+  scripts/
+    detect-tracker.sh              # ID format detection
+```
+
+No TypeScript. No build step. No `node_modules`. Just Markdown files that tell Claude what to do.
+
+**Want to add a feature?** Edit a `.md` file and submit a PR.
+
+---
 
 ## Contributing
 
-Contributions are welcome! This is a pure Markdown plugin — no build step required.
+This is an open-source project and contributions are very welcome!
 
-1. Fork the repository
-2. Create a feature branch
-3. Edit the relevant `SKILL.md` or agent file
-4. Test with `claude --plugin-dir ./ticket-pilot`
-5. Submit a pull request
+1. **Fork** the repository
+2. **Create** a feature branch
+3. **Edit** the relevant `SKILL.md` or agent file
+4. **Test** with `claude --plugin-dir ./ticket-pilot`
+5. **Submit** a pull request
+
+### Ideas for contributions
+
+- Add support for more trackers (Asana, Shortcut, YouTrack, ...)
+- Improve triage heuristics
+- Add a `/ticket-pilot:status` command for checking ticket state
+- Better sprint detection across trackers
+- Localization of ticket templates
+
+---
 
 ## License
 
-MIT
+[MIT](LICENSE) — do whatever you want with it.

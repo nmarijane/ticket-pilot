@@ -7,5 +7,5 @@
   "license": "MIT",
   "keywords": ["linear", "github", "jira", "issues", "tickets", "workflow"],
   "skills": "./skills/",
-  "agents": "./agents/"
+  "agents": ["./agents/resolver.md", "./agents/triager.md"]
 }
