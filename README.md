@@ -7,6 +7,7 @@
 *Go from ticket to pull request without leaving your terminal.*
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Install with skills.sh](https://img.shields.io/badge/skills.sh-install-ff6600)](https://skills.sh)
 [![Claude Code Plugin](https://img.shields.io/badge/claude--code-plugin-blueviolet)](https://code.claude.com/docs/en/plugins)
 [![Linear](https://img.shields.io/badge/Linear-supported-5E6AD2)](https://linear.app)
 [![GitHub Issues](https://img.shields.io/badge/GitHub_Issues-supported-333)](https://github.com)
@@ -167,19 +168,22 @@ Navigate with arrow keys, type to filter, press Enter to select. Requires [`gum`
 
 ## Quick Start
 
-### 1. Clone
+### Option A: Install via skills.sh (recommended)
 
 ```bash
-git clone https://github.com/nmarijane/ticket-pilot.git
+npx skills add nmeridjen/ticket-pilot
 ```
 
-### 2. Launch
+That's it. The skills are installed and ready to use.
+
+### Option B: Install as Claude Code plugin
 
 ```bash
+git clone https://github.com/nmeridjen/ticket-pilot.git
 claude --plugin-dir ./ticket-pilot
 ```
 
-### 3. Go
+### Start using it
 
 ```
 /ticket-pilot:explore
