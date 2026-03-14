@@ -8,6 +8,16 @@ A new skill for open source maintainers to analyze, evaluate, and act on incomin
 
 Open source maintainers receive issues of varying quality and relevance. Currently there's no structured way to triage incoming issues from a maintainer's perspective — evaluating not just technical complexity (which `triage` handles) but also issue quality, relevance to the project, and whether the issue should even be worked on.
 
+## SKILL.md Frontmatter
+
+```yaml
+name: moderate
+description: Analyze and moderate incoming issues — evaluate quality, relevance, feasibility, and recommend actions
+argument-hint: "[ISSUE-ID] [--batch] [--yolo]"
+```
+
+No `context: fork` (moderate does not modify code). No `agent` field — single-issue mode runs inline, batch mode dispatches moderator agents explicitly via the Agent tool.
+
 ## Interface
 
 ```
@@ -15,8 +25,10 @@ Open source maintainers receive issues of varying quality and relevance. Current
 ```
 
 - `ISSUE-ID` — analyze a single issue
-- `--batch` — analyze all open untriaged issues (no action labels)
+- `--batch` — analyze all open untriaged issues
 - `--yolo` — execute actions directly without confirmation
+
+`$ARGUMENTS` is parsed for the issue ID and flags.
 
 Prerequisites: same as other skills (`.claude/ticket-pilot.json` with tracker configured, auto-setup if absent).
 
@@ -48,6 +60,7 @@ Each issue is scored on 4 axes (good / fair / insufficient):
 - Sufficient description to understand the problem/request
 - Bugs: repro steps, expected vs observed behavior, version/environment
 - Features: use case, motivation
+- **No body at all** → automatic "insufficient" score, verdict: request info
 
 ### 2. Relevance
 - Issue concerns this project (not a third-party dependency)
@@ -55,9 +68,8 @@ Each issue is scored on 4 axes (good / fair / insufficient):
 - Not already resolved (check recent branches, commits, changelog)
 
 ### 3. Feasibility
-- Delegated to triager agent: codebase analysis for realism
-- Coherence with existing architecture (e.g., requesting PostgreSQL on a project with no DB layer)
-- Complexity estimate (S/M/L/XL)
+- Delegated to triager agent: codebase analysis for realism + complexity estimate (S/M/L/XL)
+- The moderator agent additionally checks **architectural coherence** on top of the triager's output (e.g., requesting PostgreSQL on a project with no DB layer) — this is not part of the triager's scope
 
 ### 4. Value
 - Benefits the project and its users?
@@ -67,9 +79,14 @@ Each issue is scored on 4 axes (good / fair / insufficient):
 ### Verdict Logic
 
 - Insufficient quality → request info
+- **Duplicate detected** → close with link to original issue
 - Low relevance → close with reason
 - All good → accept + suggested labels
 - XL feasibility or questionable value → accept but flag for discussion
+
+### Ambiguity Definition
+
+A verdict is **ambiguous** when any axis scores "fair" (not clearly good or insufficient). In `--yolo` mode, ambiguous verdicts require maintainer confirmation instead of auto-executing.
 
 ## Actions
 
@@ -78,6 +95,7 @@ Each issue is scored on 4 axes (good / fair / insufficient):
 | Accept | Suggest labels | Add labels, comment "Triaged ✓" |
 | Request info | Display draft comment | Post comment, add `needs-info` label |
 | Close | Display reason and draft | Post comment, close issue |
+| Close (duplicate) | Display reason, link to original | Post comment with link to original, close issue |
 
 ### Labels
 - Uses existing repo labels only — never creates new labels
@@ -87,22 +105,26 @@ Each issue is scored on 4 axes (good / fair / insufficient):
 - Professional and kind tone (open source contributors are volunteers)
 - Always thank the contributor
 - Clearly explain the reason when closing
-- English by default (project language), unless project is explicitly in another language
+- English by default. Language detection: check for a `language` field in `ticket-pilot.json`, then fall back to README language. If undetectable, use English
 
 ### Safeguards in `--yolo` mode
-- Ambiguous scores (e.g., borderline relevance) → ask for confirmation even in `--yolo`
-- Issues with high engagement (many 👍, many comments) → never auto-closed, always escalated to maintainer
+- Ambiguous verdicts (any axis scored "fair") → ask for confirmation even in `--yolo`
+- **High engagement threshold**: issues with 5+ reactions or 3+ comments → never auto-closed, always escalated to maintainer
 
 ## Batch Mode
 
 ### Issue Selection
-- `--batch`: all open issues without action labels (no `bug`, `enhancement`, `needs-info`, etc.)
-- Detects "untriaged" issues by absence of labels — no special `untriaged` label required
+- `--batch`: all open issues considered "untriaged"
+- **Untriaged detection** varies by tracker:
+  - **GitHub**: issues with no labels at all, or only informational labels (not action labels like `bug`, `enhancement`, `needs-info`, `wontfix`, `duplicate`)
+  - **Linear/Jira**: issues in initial status only ("Triage", "Backlog", "To Do") — status-based, not label-based
+- The set of "triaged labels" (GitHub) and "triaged statuses" (Linear/Jira) can be customized via an optional `moderateConfig.triagedLabels` / `moderateConfig.triagedStatuses` array in `ticket-pilot.json`
+- **Zero issues found**: display "No untriaged issues found" and exit
 
 ### Execution
-- Each issue dispatched to a moderator agent in parallel
+- Each issue dispatched to a moderator agent via the Agent tool
 - Moderator agent delegates to triager agent for technical analysis
-- Max 10 issues in parallel, remainder queued
+- Issues are dispatched in parallel where the Agent tool supports it; no explicit concurrency cap (platform-managed)
 
 ### Batch Report
 
@@ -151,10 +173,11 @@ In `--yolo` batch mode, safeguards still apply (ambiguous/popular issues escalat
 
 ### New
 - `skills/moderate/SKILL.md` — main skill with instructions, modes, criteria
-- `agents/moderator.md` — batch agent (one per issue), access: Read, Grep, Glob, Bash + triager delegation
+- `agents/moderator.md` — batch agent (one per issue), `tools: Read, Grep, Glob, Bash, Agent` (uses Agent tool to delegate to triager)
 
 ### Modified
-- `scripts/pick.sh` — add `moderate` as available action
+- `.claude-plugin/plugin.json` — add `./agents/moderator.md` to the agents array
+- `scripts/pick.sh` — add `moderate` as available action (`"moderate — Evaluate issue quality and recommend accept/request-info/close"`)
 - `README.md` — document new skill in features table
 
 ### Unchanged
@@ -168,3 +191,4 @@ In `--yolo` batch mode, safeguards still apply (ambiguous/popular issues escalat
 - **resolve**: a moderated+accepted issue can then be resolved with `/ticket-pilot:resolve`
 - **explore**: `moderate` does deeper analysis than explore (which is read-only discovery)
 - **create**: orthogonal — create makes tickets, moderate evaluates incoming ones
+- **setup**: `moderate` uses the same `ticket-pilot.json` config and follows the same auto-setup pattern
