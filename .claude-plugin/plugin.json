@@ -1,11 +1,11 @@
 {
   "name": "ticket-pilot",
   "version": "0.1.0",
-  "description": "Issue tracker integration for Claude Code — resolve, triage, explore, and create tickets from your terminal",
+  "description": "Issue tracker integration for Claude Code — resolve, triage, explore, create, and moderate tickets from your terminal",
   "author": { "name": "Nicolas Meridjen" },
   "repository": "https://github.com/nmeridjen/ticket-pilot",
   "license": "MIT",
   "keywords": ["linear", "github", "jira", "issues", "tickets", "workflow"],
   "skills": "./skills/",
-  "agents": ["./agents/resolver.md", "./agents/triager.md"]
+  "agents": ["./agents/resolver.md", "./agents/triager.md", "./agents/moderator.md"]
 }

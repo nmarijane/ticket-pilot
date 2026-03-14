@@ -59,13 +59,13 @@ parse_args() {
         SCOPE="sprint"
         shift
         ;;
-      resolve|explore|triage)
+      resolve|explore|triage|moderate)
         ACTION="$1"
         shift
         ;;
       *)
         echo -e "${RED}Error:${NC} Unknown argument: $1"
-        echo "Usage: ./pick.sh [resolve|explore|triage] [--tracker github|linear|jira] [--all|--sprint]"
+        echo "Usage: ./pick.sh [resolve|explore|triage|moderate] [--tracker github|linear|jira] [--all|--sprint]"
         exit 1
         ;;
     esac
@@ -270,7 +270,8 @@ pick_action() {
   choice=$(gum choose \
     "resolve  — Implement the solution and create a PR" \
     "explore  — Read-only analysis of the ticket" \
-    "triage   — Analyze priority, complexity, and dependencies" || true)
+    "triage   — Analyze priority, complexity, and dependencies" \
+    "moderate — Evaluate issue quality and recommend accept/request-info/close" || true)
 
   if [[ -z "$choice" ]]; then
     echo -e "${RED}Cancelled.${NC}" >&2

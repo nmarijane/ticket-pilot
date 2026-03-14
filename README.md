@@ -91,6 +91,16 @@ Without arguments, lists recent open tickets and lets you pick one interactively
 
 Analyzes the codebase to generate structured tickets with title, description, acceptance criteria, and suggested labels. Previews before creating.
 
+### `/ticket-pilot:moderate` — Evaluate and moderate incoming issues
+
+```
+/ticket-pilot:moderate #42                 # analyze a single issue
+/ticket-pilot:moderate --batch             # analyze all untriaged issues
+/ticket-pilot:moderate --batch --yolo      # analyze and act on all untriaged issues
+```
+
+Evaluates issues on quality, relevance, feasibility, and value. Recommends accepting, requesting more info, or closing — with drafted comments ready to post. In `--yolo` mode, executes actions directly (with safeguards: ambiguous verdicts and popular issues always require confirmation).
+
 ### Interactive Picker — Browse and select tickets visually
 
 ```bash
@@ -204,6 +214,9 @@ ticket-pilot stores its config in `.claude/ticket-pilot.json`. This file is crea
 | `teamPrefixes` | Team prefixes for this project | — |
 | `defaultPrefix` | Default team when creating tickets | — |
 | `defaultMode` | `guided` or `auto` for `/resolve` | `guided` |
+| `triagedLabels` | Labels that mark an issue as triaged (GitHub) | `["bug","enhancement",...]` |
+| `triagedStatuses` | Statuses that mark an issue as triaged (Linear/Jira) | `["In Progress",...]` |
+| `language` | Language for generated comments | `en` |
 
 Commit this file to share the config with your team, or add it to `.gitignore` for personal settings.
 
@@ -219,6 +232,7 @@ Commit this file to share the config with your team, or add it to `.gitignore` f
 | Add comments | Yes | Yes | Yes |
 | Sprint/cycle view | Yes | Milestones | Yes |
 | Branch name from ticket | Yes | — | — |
+| Moderate issues | Yes | Yes | Yes |
 
 ---
 
@@ -235,9 +249,11 @@ ticket-pilot/
     triage/SKILL.md                # Priority & complexity analysis
     explore/SKILL.md               # Read-only ticket summary + browse
     create/SKILL.md                # Structured ticket creation
+    moderate/SKILL.md              # Issue moderation & evaluation
   agents/
     resolver.md                    # Subagent: implementation
     triager.md                     # Subagent: batch analysis
+    moderator.md                   # Subagent: issue moderation
   scripts/
     detect-tracker.sh              # ID format detection
 ```
