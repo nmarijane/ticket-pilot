@@ -171,7 +171,7 @@ Navigate with arrow keys, type to filter, press Enter to select. Requires [`gum`
 ### Option A: Install via skills.sh (recommended)
 
 ```bash
-npx skills add nmeridjen/ticket-pilot
+npx skills add nmarijane/ticket-pilot
 ```
 
 That's it. The skills are installed and ready to use.
@@ -179,7 +179,7 @@ That's it. The skills are installed and ready to use.
 ### Option B: Install as Claude Code plugin
 
 ```bash
-git clone https://github.com/nmeridjen/ticket-pilot.git
+git clone https://github.com/nmarijane/ticket-pilot.git
 claude --plugin-dir ./ticket-pilot
 ```
 
