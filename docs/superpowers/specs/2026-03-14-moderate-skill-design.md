@@ -92,7 +92,7 @@ A verdict is **ambiguous** when any axis scores "fair" (not clearly good or insu
 
 | Verdict | Normal mode | `--yolo` mode |
 |---|---|---|
-| Accept | Suggest labels | Add labels, comment "Triaged ✓" |
+| Accept | Suggest labels | Add labels, comment with brief moderation summary (e.g., "Reviewed — complexity M, labeled as bug. Ready to work on.") |
 | Request info | Display draft comment | Post comment, add `needs-info` label |
 | Close | Display reason and draft | Post comment, close issue |
 | Close (duplicate) | Display reason, link to original | Post comment with link to original, close issue |
@@ -109,7 +109,7 @@ A verdict is **ambiguous** when any axis scores "fair" (not clearly good or insu
 
 ### Safeguards in `--yolo` mode
 - Ambiguous verdicts (any axis scored "fair") → ask for confirmation even in `--yolo`
-- **High engagement threshold**: issues with 5+ reactions or 3+ comments → never auto-closed, always escalated to maintainer
+- **High engagement threshold**: issues with 5+ reactions (GitHub) / 5+ votes (Jira) / 5+ subscribers (Linear), or 3+ comments on any tracker → never auto-closed, always escalated to maintainer
 
 ## Batch Mode
 
@@ -118,8 +118,9 @@ A verdict is **ambiguous** when any axis scores "fair" (not clearly good or insu
 - **Untriaged detection** varies by tracker:
   - **GitHub**: issues with no labels at all, or only informational labels (not action labels like `bug`, `enhancement`, `needs-info`, `wontfix`, `duplicate`)
   - **Linear/Jira**: issues in initial status only ("Triage", "Backlog", "To Do") — status-based, not label-based
-- The set of "triaged labels" (GitHub) and "triaged statuses" (Linear/Jira) can be customized via an optional `moderateConfig.triagedLabels` / `moderateConfig.triagedStatuses` array in `ticket-pilot.json`
+- The set of "triaged labels" (GitHub) and "triaged statuses" (Linear/Jira) can be customized via optional `triagedLabels` / `triagedStatuses` arrays in `ticket-pilot.json` (top-level, following existing flat config convention)
 - **Zero issues found**: display "No untriaged issues found" and exit
+- **Idempotency**: skip issues that already have a moderation comment (detect by comment signature). In `--batch` mode, previously moderated issues are excluded from the run
 
 ### Execution
 - Each issue dispatched to a moderator agent via the Agent tool
@@ -153,7 +154,7 @@ In `--yolo` batch mode, safeguards still apply (ambiguous/popular issues escalat
 - Comments: `gh issue comment`
 - Close: `gh issue close`
 - Labels: `gh issue edit --add-label`
-- Popularity: count 👍 reactions and comments
+- Popularity: count 👍 reactions and comments (via `gh api`)
 
 ### Linear
 - Read: MCP Linear
@@ -161,6 +162,7 @@ In `--yolo` batch mode, safeguards still apply (ambiguous/popular issues escalat
 - Comments and status changes: MCP
 - Close: transition to "Cancelled" or "Won't Do" status
 - Labels: use existing Linear labels or workflow status
+- Popularity: comment count only (Linear has no reaction system); subscriber count as secondary signal
 
 ### Jira
 - Read: `getJiraIssue`, `searchJiraIssuesUsingJql`
@@ -168,16 +170,17 @@ In `--yolo` batch mode, safeguards still apply (ambiguous/popular issues escalat
 - Comments: `addCommentToJiraIssue`
 - Close: `transitionJiraIssue` to "Won't Do" / "Closed"
 - Labels: `editJiraIssue`
+- Popularity: votes + watchers count; comment count as secondary signal
 
 ## Files to Create/Modify
 
 ### New
 - `skills/moderate/SKILL.md` — main skill with instructions, modes, criteria
-- `agents/moderator.md` — batch agent (one per issue), `tools: Read, Grep, Glob, Bash, Agent` (uses Agent tool to delegate to triager)
+- `agents/moderator.md` — batch agent (one per issue), `tools: Read, Grep, Glob, Bash(gh *), Agent` (restricted to `gh` CLI like triager; uses Agent tool to delegate to triager)
 
 ### Modified
 - `.claude-plugin/plugin.json` — add `./agents/moderator.md` to the agents array
-- `scripts/pick.sh` — add `moderate` as available action (`"moderate — Evaluate issue quality and recommend accept/request-info/close"`)
+- `scripts/pick.sh` — add `moderate` as available action: update both the `parse_args` case pattern (`resolve|explore|triage|moderate`) and the `pick_action` choices (`"moderate — Evaluate issue quality and recommend accept/request-info/close"`)
 - `README.md` — document new skill in features table
 
 ### Unchanged
