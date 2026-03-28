@@ -101,7 +101,7 @@ detect_tracker() {
   # 3. Interactive picker
   echo -e "${BOLD}Which tracker do you use?${NC}" >&2
   local choice
-  choice=$(gum choose "github" "linear" "jira" || true)
+  choice=$(gum choose "github" "linear" "jira" "asana" || true)
   if [[ -z "$choice" ]]; then
     echo -e "${RED}Cancelled.${NC}" >&2
     exit 0
@@ -243,6 +243,67 @@ fetch_jira() {
   echo "$response" | jq -r '.issues[] | "\(.key)\t\(.fields.summary)\t\(.fields.status.name)"'
 }
 
+# --- Asana ---
+fetch_asana() {
+  local scope="$1"
+
+  if [[ -z "${ASANA_TOKEN:-}" ]]; then
+    echo -e "${RED}Error:${NC} ASANA_TOKEN environment variable is required for Asana." >&2
+    echo -e "Create one at: ${CYAN}https://app.asana.com/0/my-apps${NC}" >&2
+    exit 1
+  fi
+
+  if [[ -z "${ASANA_WORKSPACE_ID:-}" ]]; then
+    echo -e "${RED}Error:${NC} ASANA_WORKSPACE_ID environment variable is required for Asana." >&2
+    echo -e "Find your workspace ID in the Asana URL or via the API: ${CYAN}https://app.asana.com/api/1.0/workspaces${NC}" >&2
+    exit 1
+  fi
+
+  local fields="name,assignee,completed,permalink_url"
+  local filter
+  case "$scope" in
+    mine)
+      # Fetch tasks assigned to current user in the workspace
+      local me_response me_id
+      me_response=$(curl -sf "https://app.asana.com/api/1.0/users/me" \
+        -H "Authorization: Bearer $ASANA_TOKEN" 2>/dev/null)
+      if [[ -z "$me_response" ]]; then
+        echo -e "${RED}Asana API error:${NC} Failed to fetch current user." >&2
+        exit 1
+      fi
+      me_id=$(echo "$me_response" | jq -r '.data.gid')
+      filter="assignee=${me_id}&completed_since=now"
+      ;;
+    all)
+      filter="completed_since=now"
+      ;;
+    sprint)
+      # Asana doesn't have native sprints; use incomplete tasks sorted by due date
+      filter="completed_since=now&sort_by=due_date"
+      ;;
+  esac
+
+  local response
+  response=$(curl -sf \
+    "https://app.asana.com/api/1.0/workspaces/${ASANA_WORKSPACE_ID}/tasks?${filter}&opt_fields=${fields}&limit=50" \
+    -H "Authorization: Bearer $ASANA_TOKEN" 2>/dev/null)
+
+  if [[ -z "$response" ]]; then
+    echo -e "${RED}Asana API error:${NC} Connection failed." >&2
+    exit 1
+  fi
+
+  local errors
+  errors=$(echo "$response" | jq -r '.errors[0].message // empty' 2>/dev/null || true)
+  if [[ -n "$errors" ]]; then
+    echo -e "${RED}Asana API error:${NC} $errors" >&2
+    exit 1
+  fi
+
+  echo "$response" | jq -r \
+    '.data[] | select(.completed == false) | "\(.gid)\t\(.name)\topen"'
+}
+
 # --- Display formatting ---
 format_tickets() {
   local term_width
@@ -297,6 +358,7 @@ main() {
     github)  raw_tickets=$(fetch_github "$SCOPE") ;;
     linear)  raw_tickets=$(fetch_linear "$SCOPE") ;;
     jira)    raw_tickets=$(fetch_jira "$SCOPE") ;;
+    asana)   raw_tickets=$(fetch_asana "$SCOPE") ;;
     *)
       echo -e "${RED}Error:${NC} Unknown tracker: $tracker"
       exit 1

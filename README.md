@@ -12,6 +12,7 @@
 [![Linear](https://img.shields.io/badge/Linear-supported-5E6AD2)](https://linear.app)
 [![GitHub Issues](https://img.shields.io/badge/GitHub_Issues-supported-333)](https://github.com)
 [![Jira](https://img.shields.io/badge/Jira-supported-0052CC)](https://www.atlassian.com/software/jira)
+[![Asana](https://img.shields.io/badge/Asana-supported-F06A6A)](https://asana.com)
 
 </div>
 
@@ -196,6 +197,7 @@ That's it. On first use, ticket-pilot asks which tracker you use, verifies it's 
 | **Linear** | `claude mcp add --transport http linear https://mcp.linear.app/mcp` |
 | **GitHub** | `brew install gh && gh auth login` |
 | **Jira** | Configure the [Atlassian MCP server](https://www.npmjs.com/package/@anthropic/mcp-atlassian) |
+| **Asana** | Set `ASANA_TOKEN` and `ASANA_WORKSPACE_ID` — see [Asana setup](#asana-setup) below |
 
 ---
 
@@ -228,15 +230,80 @@ Commit this file to share the config with your team, or add it to `.gitignore` f
 
 ## Supported Trackers
 
-|  | Linear | GitHub Issues | Jira |
-|--|--------|--------------|------|
-| Read tickets | Yes | Yes | Yes |
-| Create tickets | Yes | Yes | Yes |
-| Update status | Yes | Via PR | Yes |
-| Add comments | Yes | Yes | Yes |
-| Sprint/cycle view | Yes | Milestones | Yes |
-| Branch name from ticket | Yes | — | — |
-| Moderate issues | Yes | Yes | Yes |
+|  | Linear | GitHub Issues | Jira | Asana |
+|--|--------|--------------|------|-------|
+| Read tickets | Yes | Yes | Yes | Yes |
+| Create tickets | Yes | Yes | Yes | — |
+| Update status | Yes | Via PR | Yes | Yes |
+| Add comments | Yes | Yes | Yes | Yes (via stories) |
+| Sprint/cycle view | Yes | Milestones | Yes | Due-date sort |
+| Branch name from ticket | Yes | — | — | — |
+| Moderate issues | Yes | Yes | Yes | — |
+
+---
+
+## Asana Setup
+
+ticket-pilot supports Asana via its [REST API v1](https://developers.asana.com/docs/asana). Authentication uses a **Personal Access Token** — no OAuth setup required.
+
+### 1. Create a Personal Access Token
+
+1. Go to [https://app.asana.com/0/my-apps](https://app.asana.com/0/my-apps)
+2. Click **Create new token**
+3. Give it a name (e.g., `ticket-pilot`) and copy the token
+
+### 2. Find your Workspace ID
+
+```bash
+curl -s "https://app.asana.com/api/1.0/workspaces" \
+  -H "Authorization: Bearer YOUR_ASANA_TOKEN" | jq '.data[] | {gid, name}'
+```
+
+### 3. Set environment variables
+
+```bash
+export ASANA_TOKEN="your-personal-access-token"
+export ASANA_WORKSPACE_ID="your-workspace-gid"
+
+# Optional: scope list_tickets to a specific project
+export ASANA_PROJECT_ID="your-project-gid"
+```
+
+Add these to your shell profile (`.zshrc`, `.bashrc`, etc.) for persistence.
+
+### 4. Configure ticket-pilot
+
+Add to `.claude/ticket-pilot.json`:
+
+```json
+{
+  "tracker": "asana"
+}
+```
+
+Or run `/ticket-pilot:setup --tracker asana` and select **asana** when prompted.
+
+### 5. Use the tracker script directly (optional)
+
+```bash
+# Get a single task
+./scripts/trackers/asana.sh get_ticket 1234567890123456
+
+# List your open tasks
+./scripts/trackers/asana.sh list_tickets mine
+
+# List all open tasks in the workspace (up to 100)
+./scripts/trackers/asana.sh list_tickets all 100
+
+# Mark a task completed
+./scripts/trackers/asana.sh update_ticket_status 1234567890123456 completed
+```
+
+### Notes
+
+- **Sprints**: Asana doesn't have a native sprint concept. The `sprint` scope returns all incomplete tasks sorted by due date ascending.
+- **In-progress status**: Asana uses sections and custom fields for workflow states rather than a built-in "in progress" status. `update_ticket_status <gid> in_progress` adds a comment instead.
+- **Project scoping**: Set `ASANA_PROJECT_ID` to narrow results to a single project rather than the whole workspace.
 
 ---
 
@@ -260,6 +327,9 @@ ticket-pilot/
     moderator.md                   # Subagent: issue moderation
   scripts/
     detect-tracker.sh              # ID format detection
+    pick.sh                        # Interactive ticket picker
+    trackers/
+      asana.sh                     # Asana tracker provider (get/list/update)
 ```
 
 No TypeScript. No build step. No `node_modules`. Just Markdown files that tell Claude what to do.
